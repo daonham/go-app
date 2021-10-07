@@ -6,9 +6,16 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/joho/godotenv"
 )
 
-func ConnectDB(db *sql.DB) {
+func ConnectDataBase() {
+	err := godotenv.Load(".env")
+
+	if err != nil {
+		panic(err.Error())
+	}
+
 	dbDriver := os.Getenv("DB_DRIVER")
 	dbUser := os.Getenv("DB_USER")
 	dbPass := os.Getenv("DB_PASSWORD")
@@ -23,5 +30,13 @@ func ConnectDB(db *sql.DB) {
 	db.SetMaxOpenConns(10)
 	db.SetMaxIdleConns(10)
 
-	return db
+	defer db.Close()
+
+	insert, err := db.Query("INSERT INTO posts(title, content) VALUES ( 'post title 2', 'Post Content 2' )")
+
+	if err != nil {
+		panic(err.Error())
+	}
+	// be careful deferring Queries if you are using transactions
+	defer insert.Close()
 }
