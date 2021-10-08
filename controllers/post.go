@@ -52,9 +52,17 @@ func GetPosts(c *gin.Context) {
 }
 
 func GetPost(c *gin.Context) {
+	cid := c.Param("id")
+	pid, err := strconv.Atoi(cid)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{
+			"messages": err,
+		})
+	}
+
 	db := database.ConnectDataBase()
 
-	rows, err := db.Query("SELECT id, title, content FROM posts WHERE id=" + c.Param("id"))
+	rows, err := db.Query("SELECT id, title, content FROM posts WHERE id=?", pid)
 
 	defer db.Close()
 

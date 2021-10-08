@@ -3,7 +3,7 @@ GET http://localhost:8070/post
 Content-Type: application/json
 
 ### Get an post
-GET http://localhost:8070/post/2
+GET http://localhost:8070/post/3
 Content-Type: application/json
 
 ### Create a new post
