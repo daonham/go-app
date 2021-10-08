@@ -1,18 +1,29 @@
-### Get all albums
-GET http://localhost:8070/albums
+### Get all post
+GET http://localhost:8070/post
 Content-Type: application/json
 
-### Get an albums
-GET http://localhost:8070/albums/4
+### Get an post
+GET http://localhost:8070/post/2
 Content-Type: application/json
 
-### Create a new album
-POST http://localhost:8070/albums
+### Create a new post
+POST http://localhost:8070/post
 Content-Type: application/json
 
 {
-    "id": "4",
-    "title": "The Modern Sound of Betty Carter",
-    "artist": "Betty Carter",
-    "price": 49.99
+    "title": "Post title new",
+    "content": "Post content new"
 }
+
+### Update a post
+PUT http://localhost:8070/post/10
+Content-Type: application/json
+
+{
+    "title": "Post title edited 2",
+    "content": "Post content edit"
+}
+
+### Delete a post
+DELETE http://localhost:8070/post/15
+Content-Type: application/json

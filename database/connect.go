@@ -9,7 +9,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func ConnectDataBase() {
+func ConnectDataBase() (db *sql.DB) {
 	err := godotenv.Load(".env")
 
 	if err != nil {
@@ -20,7 +20,7 @@ func ConnectDataBase() {
 	dbUser := os.Getenv("DB_USER")
 	dbPass := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
-	db, err := sql.Open(dbDriver, dbUser+":"+dbPass+"@/"+dbName)
+	db, err = sql.Open(dbDriver, dbUser+":"+dbPass+"@/"+dbName)
 
 	if err != nil {
 		panic(err.Error())
@@ -30,13 +30,5 @@ func ConnectDataBase() {
 	db.SetMaxOpenConns(10)
 	db.SetMaxIdleConns(10)
 
-	defer db.Close()
-
-	insert, err := db.Query("INSERT INTO posts(title, content) VALUES ( 'post title 2', 'Post Content 2' )")
-
-	if err != nil {
-		panic(err.Error())
-	}
-	// be careful deferring Queries if you are using transactions
-	defer insert.Close()
+	return db
 }
