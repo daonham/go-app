@@ -20,7 +20,7 @@ func ConnectDataBase() (db *sql.DB) {
 	dbUser := os.Getenv("DB_USER")
 	dbPass := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
-	db, err = sql.Open(dbDriver, dbUser+":"+dbPass+"@/"+dbName)
+	db, err = sql.Open(dbDriver, dbUser+":"+dbPass+"@/"+dbName+"?parseTime=true")
 
 	if err != nil {
 		panic(err.Error())
