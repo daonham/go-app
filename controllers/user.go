@@ -18,7 +18,7 @@ type User struct {
 }
 
 func GetUsers(c *gin.Context) {
-	db := database.ConnectDataBase()
+	db := database.ConnectDB()
 
 	rows, err := db.Query("SELECT id, email, name, createdAt, role FROM user")
 
@@ -76,7 +76,7 @@ func GetUser(c *gin.Context) {
 		})
 	}
 
-	db := database.ConnectDataBase()
+	db := database.ConnectDB()
 
 	rows, err := db.Query("SELECT id, email, name, createdAt, role FROM user WHERE id=?", uid)
 
@@ -130,7 +130,7 @@ func CreateUser(c *gin.Context) {
 	var create CreateUser
 
 	if err := c.ShouldBindJSON(&create); err == nil {
-		db := database.ConnectDataBase()
+		db := database.ConnectDB()
 
 		insert, err := db.Prepare("INSERT INTO user(email, name, pass, createdAt, role) VALUES(?,?,?,?,?)")
 

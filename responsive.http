@@ -3,7 +3,7 @@ GET http://localhost:8070/post
 Content-Type: application/json
 
 ### Get an post
-GET http://localhost:8070/post/3
+GET http://localhost:8070/post/1
 Content-Type: application/json
 
 ### Create a new post
@@ -12,18 +12,22 @@ Content-Type: application/json
 
 {
     "title": "Post title new",
-    "content": "Post content new"
+    "content": "Post content new",
+    "published": true,
+    "authorId": 1
 }
 
 ### Update a post
-PUT http://localhost:8070/post/10
+PUT http://localhost:8070/post/1
 Content-Type: application/json
 
 {
-    "title": "Post title edited 2",
-    "content": "Post content edit"
+    "title": "Post title edited",
+    "content": "Post content edit",
+    "published": true,
+    "authorId": 1
 }
 
 ### Delete a post
-DELETE http://localhost:8070/post/15
+DELETE http://localhost:8070/post/11
 Content-Type: application/json
