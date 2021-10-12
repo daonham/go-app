@@ -87,7 +87,7 @@ func GetPost(pid int) (post Post, message string, err error) {
 func CreatePost(create forms.PostForm) (id int64, message string, err error) {
 	db := database.ConnectDB()
 
-	insert, err := db.Prepare("INSERT INTO post(updatedAt, title, content, published, authorId) VALUES(?,?,?,?,?)")
+	insert, err := db.Prepare("INSERT INTO post(title, content, published, authorId) VALUES(?,?,?,?)")
 
 	defer db.Close()
 
@@ -95,16 +95,14 @@ func CreatePost(create forms.PostForm) (id int64, message string, err error) {
 		return 0, "Error when connect DB", err
 	}
 
-	timeStamp := time.Now().UTC().Format("2006-01-02 15:04:05") // Format timestamp in MySQL
-
-	res, err := insert.Exec(timeStamp, create.Title, create.Content, create.Published, create.AuthorId)
+	res, err := insert.Exec(create.Title, create.Content, create.Published, create.AuthorId)
 	if err != nil {
-		return id, "Create post successfully", err
+		return id, "Create post has error", err
 	}
 
 	lastId, err := res.LastInsertId()
 	if err != nil {
-		return 0, "Error when connect DB", err
+		return 0, "Error get LastInsertId", err
 	}
 
 	return lastId, "Create post successfully", nil
@@ -166,7 +164,7 @@ func DeletePost(id int) (rows int64, message string, err error) {
 	}
 
 	if row == 0 {
-		return 0, "Error: Update 0 records", errors.New("updated 0 records")
+		return 0, "Error: Cannot delete this post", errors.New("deleted 0 records")
 	}
 
 	return row, "Delete post successfully", nil

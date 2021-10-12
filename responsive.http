@@ -18,7 +18,7 @@ Content-Type: application/json
 }
 
 ### Update a post
-PUT http://localhost:8070/post/1
+PUT http://localhost:8070/post/2
 Content-Type: application/json
 
 {
@@ -31,3 +31,44 @@ Content-Type: application/json
 ### Delete a post
 DELETE http://localhost:8070/post/11
 Content-Type: application/json
+
+### Get all user
+GET http://localhost:8070/user
+Content-Type: application/json
+
+### Get an user
+GET http://localhost:8070/user/1
+Content-Type: application/json
+
+### Create a new user
+POST http://localhost:8070/user
+Content-Type: application/json
+
+{
+    "email": "5@g.com",
+    "name": "user2",
+    "pass": "123456"
+}
+
+### Update a user
+PUT http://localhost:8070/user/3
+Content-Type: application/json
+
+{
+    "email": "1@g.com",
+    "name": "user2",
+    "pass": "user1"
+}
+
+### Delete a user
+DELETE http://localhost:8070/user/4
+Content-Type: application/json
+
+### Login
+POST http://localhost:8070/login
+Content-Type: application/json
+
+{
+    "email": "5@g.com",
+    "pass": "123456"
+}

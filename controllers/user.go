@@ -5,7 +5,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/daonham/go-app/database"
+	"github.com/daonham/go-app/forms"
+	"github.com/daonham/go-app/helper"
+	"github.com/daonham/go-app/models"
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,47 +20,11 @@ type User struct {
 }
 
 func GetUsers(c *gin.Context) {
-	db := database.ConnectDB()
-
-	rows, err := db.Query("SELECT id, email, name, createdAt, role FROM user")
-
-	defer db.Close()
+	users, message, err := models.GetUsers()
 
 	if err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{
-			"status": gin.H{
-				"code":    http.StatusBadRequest,
-				"message": "Post not found",
-			},
-		})
-	}
-
-	users := []User{}
-
-	for rows.Next() {
-		var id int
-		var name, email, role string
-		var createdAt time.Time
-
-		err = rows.Scan(&id, &email, &name, &createdAt, &role)
-		if err != nil {
-			c.IndentedJSON(http.StatusBadRequest, gin.H{
-				"status": gin.H{
-					"code":    http.StatusBadRequest,
-					"message": err,
-				},
-			})
-		}
-
-		user := User{}
-
-		user.Id = id
-		user.Email = email
-		user.Name = name
-		user.CreatedAt = createdAt
-		user.Role = role
-
-		users = append(users, user)
+		c.IndentedJSON(http.StatusNotAcceptable, helper.ResponseError(http.StatusNotAcceptable, message, err.Error(), helper.EmptyObj{}))
+		return
 	}
 
 	c.IndentedJSON(http.StatusOK, users)
@@ -67,52 +33,17 @@ func GetUsers(c *gin.Context) {
 func GetUser(c *gin.Context) {
 	cid := c.Param("id")
 	uid, err := strconv.Atoi(cid)
-	if err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{
-			"status": gin.H{
-				"code":    http.StatusBadRequest,
-				"message": err,
-			},
-		})
-	}
-
-	db := database.ConnectDB()
-
-	rows, err := db.Query("SELECT id, email, name, createdAt, role FROM user WHERE id=?", uid)
-
-	defer db.Close()
 
 	if err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{
-			"status": gin.H{
-				"code":    http.StatusBadRequest,
-				"message": "Post not found",
-			},
-		})
+		c.IndentedJSON(http.StatusNotAcceptable, helper.ResponseError(http.StatusNotAcceptable, "Id param need type int", err.Error(), helper.EmptyObj{}))
+		return
 	}
 
-	user := User{}
+	user, message, err := models.GetUser(uid)
 
-	for rows.Next() {
-		var id int
-		var name, email, role string
-		var createdAt time.Time
-
-		err = rows.Scan(&id, &email, &name, &createdAt, &role)
-		if err != nil {
-			c.IndentedJSON(http.StatusBadRequest, gin.H{
-				"status": gin.H{
-					"code":    http.StatusBadRequest,
-					"message": err,
-				},
-			})
-		}
-
-		user.Id = id
-		user.Email = email
-		user.Name = name
-		user.CreatedAt = createdAt
-		user.Role = role
+	if err != nil {
+		c.IndentedJSON(http.StatusNotAcceptable, helper.ResponseError(http.StatusNotAcceptable, message, err.Error(), helper.EmptyObj{}))
+		return
 	}
 
 	c.IndentedJSON(http.StatusOK, user)
@@ -120,68 +51,98 @@ func GetUser(c *gin.Context) {
 
 func CreateUser(c *gin.Context) {
 
-	type CreateUser struct {
-		Email string `form:"email" json:"email" binding:"required"`
-		Name  string `form:"name" json:"name" binding:"required"`
-		Pass  string `form:"pass" json:"pass" binding:"required"`
-		Role  string `form:"role" json:"role"`
-	}
-
-	var create CreateUser
+	var create forms.UserForm
 
 	if err := c.ShouldBindJSON(&create); err == nil {
-		db := database.ConnectDB()
-
-		insert, err := db.Prepare("INSERT INTO user(email, name, pass, createdAt, role) VALUES(?,?,?,?,?)")
-
-		defer db.Close()
+		id, message, err := models.CreateUser(create)
 
 		if err != nil {
-			c.IndentedJSON(http.StatusBadRequest, gin.H{
-				"status": gin.H{
-					"code":    http.StatusBadRequest,
-					"message": err,
-				},
-			})
+			c.IndentedJSON(http.StatusNotAcceptable, helper.ResponseError(http.StatusNotAcceptable, message, err.Error(), helper.EmptyObj{}))
+			return
 		}
 
-		timeStamp := time.Now().UTC().Format("2006-01-02 15:04:05") // Format timestamp in mysql
-
-		res, err := insert.Exec(create.Email, create.Name, create.Pass, timeStamp, create.Role)
-		if err != nil {
-			c.IndentedJSON(http.StatusBadRequest, gin.H{
-				"status": gin.H{
-					"code":    http.StatusBadRequest,
-					"message": err,
-				},
-			})
-		}
-
-		lastId, err := res.LastInsertId()
-		if err != nil {
-			c.IndentedJSON(http.StatusBadRequest, gin.H{
-				"status": gin.H{
-					"code":    http.StatusBadRequest,
-					"message": err,
-				},
-			})
-		}
-
-		id := int(lastId)
-
-		c.IndentedJSON(http.StatusCreated, gin.H{
-			"status": gin.H{
-				"code":    http.StatusCreated,
-				"message": "Post inserted",
-			},
+		data := gin.H{
 			"id": id,
-		})
+		}
+
+		c.IndentedJSON(http.StatusCreated, helper.ResponseSuccess(http.StatusCreated, message, data))
 	} else {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{
-			"status": gin.H{
-				"code":    http.StatusBadRequest,
-				"message": err.Error(),
-			},
-		})
+		c.IndentedJSON(http.StatusNotAcceptable, helper.ResponseError(http.StatusNotAcceptable, "Error: Should Bind Json", err.Error(), helper.EmptyObj{}))
+	}
+}
+
+func UpdateUser(c *gin.Context) {
+	cid := c.Param("id")
+	id, err := strconv.Atoi(cid)
+
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, helper.ResponseError(http.StatusBadRequest, "Check Id param", err.Error(), helper.EmptyObj{}))
+		return
+	}
+
+	var update forms.UserForm
+
+	if err := c.ShouldBindJSON(&update); err == nil {
+		rows, message, err := models.UpdateUser(id, update)
+
+		if err != nil {
+			c.IndentedJSON(http.StatusBadRequest, helper.ResponseError(http.StatusBadRequest, message, err.Error(), helper.EmptyObj{}))
+			return
+		}
+
+		data := gin.H{
+			"rows": rows,
+		}
+
+		c.IndentedJSON(http.StatusOK, helper.ResponseSuccess(http.StatusOK, message, data))
+	} else {
+		c.IndentedJSON(http.StatusBadRequest, helper.ResponseError(http.StatusBadRequest, "Error: Should Bind Json", err.Error(), helper.EmptyObj{}))
+		return
+	}
+}
+
+func DeleteUser(c *gin.Context) {
+	cid := c.Param("id")
+
+	id, err := strconv.Atoi(cid)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, helper.ResponseError(http.StatusBadRequest, "Check Id param", err.Error(), helper.EmptyObj{}))
+		return
+	}
+
+	rows, message, err := models.DeleteUser(id)
+
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, helper.ResponseError(http.StatusBadRequest, message, err.Error(), helper.EmptyObj{}))
+		return
+	}
+
+	data := gin.H{
+		"rows": rows,
+	}
+
+	c.IndentedJSON(http.StatusOK, helper.ResponseSuccess(http.StatusOK, message, data))
+}
+
+func Login(c *gin.Context) {
+	var login forms.LoginForm
+
+	if err := c.ShouldBindJSON(&login); err == nil {
+		user, token, message, err := models.Login(login)
+
+		if err != nil {
+			c.IndentedJSON(http.StatusBadRequest, helper.ResponseError(http.StatusBadRequest, message, err.Error(), helper.EmptyObj{}))
+			return
+		}
+
+		data := gin.H{
+			"user":  user,
+			"token": token,
+		}
+
+		c.IndentedJSON(http.StatusOK, helper.ResponseSuccess(http.StatusOK, message, data))
+	} else {
+		c.IndentedJSON(http.StatusBadRequest, helper.ResponseError(http.StatusBadRequest, "Error: Should Bind Json", err.Error(), helper.EmptyObj{}))
+		return
 	}
 }
