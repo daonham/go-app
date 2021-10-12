@@ -146,3 +146,25 @@ func Login(c *gin.Context) {
 		return
 	}
 }
+
+func Register(c *gin.Context) {
+	var register forms.RegisterForm
+
+	if err := c.ShouldBindJSON(&register); err == nil {
+		user, message, err := models.Register(register)
+
+		if err != nil {
+			c.IndentedJSON(http.StatusBadRequest, helper.ResponseError(http.StatusBadRequest, message, err.Error(), helper.EmptyObj{}))
+			return
+		}
+
+		data := gin.H{
+			"user": user,
+		}
+
+		c.IndentedJSON(http.StatusOK, helper.ResponseSuccess(http.StatusOK, message, data))
+	} else {
+		c.IndentedJSON(http.StatusBadRequest, helper.ResponseError(http.StatusBadRequest, "Error: Should Bind Json", err.Error(), helper.EmptyObj{}))
+		return
+	}
+}

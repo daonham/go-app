@@ -8,9 +8,27 @@ import (
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/twinj/uuid"
 
 	"github.com/daonham/go-app/controllers"
 )
+
+// Generate a unique ID and attach it to each request for future reference or use
+func RequestIDMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		uuid := uuid.NewV4()
+		c.Writer.Header().Set("X-Request-Id", uuid.String())
+		c.Next()
+	}
+}
+
+// JWT Authentication middleware attached to each request that needs to be authenitcated to validate the access_token in the header
+func TokenAuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		controllers.TokenValid(c)
+		c.Next()
+	}
+}
 
 func main() {
 
@@ -34,9 +52,10 @@ func main() {
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
+	router.Use(RequestIDMiddleware())
 	router.Use(gzip.Gzip(gzip.BestCompression))
 
-	router.GET("/post", controllers.GetPosts)
+	router.GET("/post", TokenAuthMiddleware(), controllers.GetPosts)
 	router.GET("/post/:id", controllers.GetPost)
 	router.POST("/post", controllers.CreatePost)
 	router.PUT("/post/:id", controllers.UpdatePost)
@@ -49,6 +68,7 @@ func main() {
 	router.DELETE("/user/:id", controllers.DeleteUser)
 
 	router.POST("/login", controllers.Login)
+	router.POST("/register", controllers.Register)
 
 	router.Run("localhost:8070")
 }

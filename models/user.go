@@ -86,7 +86,7 @@ func CreateUser(create forms.UserForm) (id int64, message string, err error) {
 	err = check.Scan(&id)
 
 	if err == nil {
-		return 0, "Email already exists", err
+		return 0, "Email already exists", errors.New("email already exists")
 	}
 
 	bytePassword := []byte(create.Pass)
@@ -182,6 +182,8 @@ func Login(form forms.LoginForm) (user User, token Token, message string, err er
 
 	query := db.QueryRow("SELECT id, email, name, pass, createdAt, role FROM user WHERE email=?", form.Email)
 
+	defer db.Close()
+
 	var id int
 	var name, email, pass, role string
 	var createdAt time.Time
@@ -218,5 +220,50 @@ func Login(form forms.LoginForm) (user User, token Token, message string, err er
 	token.AccessToken = tokenDetails.AccessToken
 	token.RefreshToken = tokenDetails.RefreshToken
 
-	return user, token, "Login done", nil
+	return user, token, "Login Done", nil
+}
+
+func Register(form forms.RegisterForm) (user User, message string, err error) {
+	db := database.ConnectDB()
+
+	check := db.QueryRow("SELECT id FROM user WHERE email=?", form.Email)
+
+	var id int
+
+	err = check.Scan(&id)
+
+	if err == nil {
+		return user, "Email already exists", errors.New("email already exists")
+	}
+
+	bytePassword := []byte(form.Pass)
+	hashedPassword, err := bcrypt.GenerateFromPassword(bytePassword, bcrypt.DefaultCost)
+
+	if err != nil {
+		return user, "Something went wrong, please try again later", err
+	}
+
+	insert, err := db.Prepare("INSERT INTO user(email, name, pass, role) VALUES(?,?,?,?)")
+
+	defer db.Close()
+
+	if err != nil {
+		return user, "Something went wrong, please try again later", err
+	}
+
+	res, err := insert.Exec(form.Email, form.Name, string(hashedPassword), "")
+	if err != nil {
+		return user, "Something went wrong, please try again later", err
+	}
+
+	lastId, err := res.LastInsertId()
+	if err != nil {
+		return user, "Error get LastInsertId", err
+	}
+
+	user.Id = int(lastId)
+	user.Name = form.Name
+	user.Email = form.Email
+
+	return user, "Register Done", err
 }
