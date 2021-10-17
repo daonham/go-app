@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -8,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/daonham/go-app/forms"
 	jwt "github.com/golang-jwt/jwt/v4"
 	uuid "github.com/twinj/uuid"
 )
@@ -40,7 +42,7 @@ func CreateToken(userID int) (*TokenDetails, error) {
 	td.RefreshUUID = uuid.NewV4().String()
 
 	var err error
-	//Creating Access Token
+	// Creating Access Token
 	atClaims := jwt.MapClaims{}
 	atClaims["authorized"] = true
 	atClaims["access_uuid"] = td.AccessUUID
@@ -54,7 +56,7 @@ func CreateToken(userID int) (*TokenDetails, error) {
 		return nil, err
 	}
 
-	//Creating Refresh Token
+	// Creating Refresh Token
 	rtClaims := jwt.MapClaims{}
 	rtClaims["refresh_uuid"] = td.RefreshUUID
 	rtClaims["user_id"] = userID
@@ -71,7 +73,7 @@ func CreateToken(userID int) (*TokenDetails, error) {
 
 func ExtractToken(r *http.Request) string {
 	bearToken := r.Header.Get("Authorization")
-	//normally Authorization the_token_xxx
+	// normally Authorization the_token_xxx
 	strArr := strings.Split(bearToken, " ")
 
 	if len(strArr) == 2 {
@@ -127,4 +129,54 @@ func ExtractTokenMetadata(r *http.Request) (*AccessDetails, error) {
 	}
 
 	return nil, err
+}
+
+func RefreshToken(form forms.Token) (tokens *Token, message string, err error) {
+	token, err := jwt.Parse(form.RefreshToken, func(token *jwt.Token) (interface{}, error) {
+		//Make sure that the token method conform to "SigningMethodHMAC"
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		return []byte(os.Getenv("REFRESH_SECRET")), nil
+	})
+
+	if err != nil {
+		return nil, "Invalid authorization, please login again", err
+	}
+
+	// is token valid?
+	if err := token.Claims.Valid(); err != nil {
+		return nil, "Invalid authorization, please login again", err
+	}
+
+	// Since token is valid, get the uuid:
+	claims, ok := token.Claims.(jwt.MapClaims) // the token claims should conform to MapClaims
+
+	if ok && token.Valid {
+		_, ok := claims["refresh_uuid"].(string)
+
+		if !ok {
+			return nil, "Invalid authorization, please login again", errors.New("invalid authorization")
+		}
+
+		userID, err := strconv.Atoi(fmt.Sprintf("%.f", claims["user_id"]))
+		if err != nil {
+			return nil, "Invalid authorization, please login again", err
+		}
+
+		// Create new pairs of refresh and access tokens
+		ts, err := CreateToken(userID)
+		if err != nil {
+			return nil, "Invalid authorization, please login again", err
+		}
+
+		return &Token{
+			AccessToken:  ts.AccessToken,
+			RefreshToken: ts.RefreshToken,
+		}, "Create token successfully created", nil
+
+	} else {
+		return nil, "Invalid authorization, please login again", errors.New("invalid authorization")
+	}
 }

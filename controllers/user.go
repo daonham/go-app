@@ -67,7 +67,7 @@ func CreateUser(c *gin.Context) {
 
 		c.IndentedJSON(http.StatusCreated, helper.ResponseSuccess(http.StatusCreated, message, data))
 	} else {
-		c.IndentedJSON(http.StatusNotAcceptable, helper.ResponseError(http.StatusNotAcceptable, "Error: Should Bind Json", err.Error(), helper.EmptyObj{}))
+		c.IndentedJSON(http.StatusNotAcceptable, helper.ResponseError(http.StatusNotAcceptable, "Error: Invalid fields", err.Error(), helper.EmptyObj{}))
 	}
 }
 
@@ -96,7 +96,7 @@ func UpdateUser(c *gin.Context) {
 
 		c.IndentedJSON(http.StatusOK, helper.ResponseSuccess(http.StatusOK, message, data))
 	} else {
-		c.IndentedJSON(http.StatusBadRequest, helper.ResponseError(http.StatusBadRequest, "Error: Should Bind Json", err.Error(), helper.EmptyObj{}))
+		c.IndentedJSON(http.StatusBadRequest, helper.ResponseError(http.StatusBadRequest, "Error: Invalid fields", err.Error(), helper.EmptyObj{}))
 		return
 	}
 }
@@ -142,7 +142,7 @@ func Login(c *gin.Context) {
 
 		c.IndentedJSON(http.StatusOK, helper.ResponseSuccess(http.StatusOK, message, data))
 	} else {
-		c.IndentedJSON(http.StatusBadRequest, helper.ResponseError(http.StatusBadRequest, "Error: Should Bind Json", err.Error(), helper.EmptyObj{}))
+		c.IndentedJSON(http.StatusBadRequest, helper.ResponseError(http.StatusBadRequest, "Error: Invalid fields", err.Error(), helper.EmptyObj{}))
 		return
 	}
 }
@@ -164,7 +164,7 @@ func Register(c *gin.Context) {
 
 		c.IndentedJSON(http.StatusOK, helper.ResponseSuccess(http.StatusOK, message, data))
 	} else {
-		c.IndentedJSON(http.StatusBadRequest, helper.ResponseError(http.StatusBadRequest, "Error: Should Bind Json", err.Error(), helper.EmptyObj{}))
+		c.IndentedJSON(http.StatusBadRequest, helper.ResponseError(http.StatusBadRequest, "Error: Invalid fields", err.Error(), helper.EmptyObj{}))
 		return
 	}
 }

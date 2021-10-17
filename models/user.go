@@ -223,7 +223,7 @@ func Login(form forms.LoginForm) (user User, token Token, message string, err er
 	return user, token, "Login Done", nil
 }
 
-func Register(form forms.RegisterForm) (user User, message string, err error) {
+func Register(form forms.RegisterForm) (user *User, message string, err error) {
 	db := database.ConnectDB()
 
 	check := db.QueryRow("SELECT id FROM user WHERE email=?", form.Email)
@@ -233,14 +233,14 @@ func Register(form forms.RegisterForm) (user User, message string, err error) {
 	err = check.Scan(&id)
 
 	if err == nil {
-		return user, "Email already exists", errors.New("email already exists")
+		return nil, "Email already exists", errors.New("email already exists")
 	}
 
 	bytePassword := []byte(form.Pass)
 	hashedPassword, err := bcrypt.GenerateFromPassword(bytePassword, bcrypt.DefaultCost)
 
 	if err != nil {
-		return user, "Something went wrong, please try again later", err
+		return nil, "Something went wrong, please try again later", err
 	}
 
 	insert, err := db.Prepare("INSERT INTO user(email, name, pass, role) VALUES(?,?,?,?)")
@@ -248,22 +248,24 @@ func Register(form forms.RegisterForm) (user User, message string, err error) {
 	defer db.Close()
 
 	if err != nil {
-		return user, "Something went wrong, please try again later", err
+		return nil, "Something went wrong, please try again later", err
 	}
 
 	res, err := insert.Exec(form.Email, form.Name, string(hashedPassword), "")
 	if err != nil {
-		return user, "Something went wrong, please try again later", err
+		return nil, "Something went wrong, please try again later", err
 	}
 
 	lastId, err := res.LastInsertId()
 	if err != nil {
-		return user, "Error get LastInsertId", err
+		return nil, "Error get LastInsertId", err
 	}
 
-	user.Id = int(lastId)
-	user.Name = form.Name
-	user.Email = form.Email
+	user = &User{
+		Id:    int(lastId),
+		Email: form.Email,
+		Name:  form.Name,
+	}
 
 	return user, "Register Done", err
 }

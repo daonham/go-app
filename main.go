@@ -70,5 +70,7 @@ func main() {
 	router.POST("/login", controllers.Login)
 	router.POST("/register", controllers.Register)
 
+	router.POST("/token/refresh", controllers.RefreshToken)
+
 	router.Run("localhost:8070")
 }
