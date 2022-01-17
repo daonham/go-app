@@ -177,7 +177,7 @@ func DeleteUser(id int) (rows int64, message string, err error) {
 	return row, "Delete post successfully", nil
 }
 
-func Login(form forms.LoginForm) (user User, token Token, message string, err error) {
+func Login(form forms.LoginForm) (user *User, token Token, message string, err error) {
 	db := database.ConnectDB()
 
 	query := db.QueryRow("SELECT id, email, name, pass, createdAt, role FROM user WHERE email=?", form.Email)
@@ -191,14 +191,16 @@ func Login(form forms.LoginForm) (user User, token Token, message string, err er
 	err = query.Scan(&id, &email, &name, &pass, &createdAt, &role)
 
 	if err != nil {
-		return user, token, "Something went wrong, please try again later", err
+		return nil, token, "Something went wrong, please try again later", err
 	}
 
-	user.Id = id
-	user.Email = email
-	user.Name = name
-	user.CreatedAt = createdAt
-	user.Role = role
+	user = &User{
+		Id:        id,
+		Email:     email,
+		Name:      name,
+		CreatedAt: createdAt,
+		Role:      role,
+	}
 
 	//Compare the password form and database if match
 	bytePassword := []byte(form.Pass)
@@ -207,14 +209,14 @@ func Login(form forms.LoginForm) (user User, token Token, message string, err er
 	err = bcrypt.CompareHashAndPassword(byteHashedPassword, bytePassword)
 
 	if err != nil {
-		return user, token, "Please check your password", err
+		return nil, token, "Please check your password", err
 	}
 
 	//Generate the JWT auth token
 	tokenDetails, err := CreateToken(user.Id)
 
 	if err != nil {
-		return user, token, "Cannot create token", err
+		return nil, token, "Cannot create token", err
 	}
 
 	token.AccessToken = tokenDetails.AccessToken
@@ -243,7 +245,7 @@ func Register(form forms.RegisterForm) (user *User, message string, err error) {
 		return nil, "Something went wrong, please try again later", err
 	}
 
-	insert, err := db.Prepare("INSERT INTO user(email, name, pass, role) VALUES(?,?,?,?)")
+	insert, err := db.Prepare("INSERT INTO user(email, name, pass) VALUES(?,?,?)")
 
 	defer db.Close()
 
@@ -251,7 +253,7 @@ func Register(form forms.RegisterForm) (user *User, message string, err error) {
 		return nil, "Something went wrong, please try again later", err
 	}
 
-	res, err := insert.Exec(form.Email, form.Name, string(hashedPassword), "")
+	res, err := insert.Exec(form.Email, form.Name, string(hashedPassword))
 	if err != nil {
 		return nil, "Something went wrong, please try again later", err
 	}
@@ -265,6 +267,7 @@ func Register(form forms.RegisterForm) (user *User, message string, err error) {
 		Id:    int(lastId),
 		Email: form.Email,
 		Name:  form.Name,
+		Role:  "USER",
 	}
 
 	return user, "Register Done", err

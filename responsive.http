@@ -46,17 +46,18 @@ POST http://localhost:8070/user
 Content-Type: application/json
 
 {
-    "email": "5@g.com",
-    "name": "user2",
-    "pass": "123456"
+    "email": "1@g.com",
+    "name": "admin",
+    "pass": "admin",
+    "role": "admin"
 }
 
 ### Update a user
-PUT http://localhost:8070/user/3
+PUT http://localhost:8070/user/2
 Content-Type: application/json
 
 {
-    "email": "1@g.com",
+    "email": "2@g.com",
     "name": "user2",
     "pass": "user1"
 }
@@ -70,8 +71,8 @@ POST http://localhost:8070/login
 Content-Type: application/json
 
 {
-    "email": "5@g.com",
-    "pass": "123456"
+    "email": "1@g.com",
+    "pass": "admin"
 }
 
 ### Register

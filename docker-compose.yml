@@ -1,22 +1,8 @@
 version: "3"
 services:
-  app:
-    container_name: app
-    build: .
-    ports:
-      - 8070:8070
-    restart: on-failure
-    volumes:
-      - .:/app
-    depends_on:
-      - fullstack-mysql
-    networks:
-      - fullstack
-
-  fullstack-mysql:
-    platform: linux/x86_64
-    image: mysql:5.7
-    container_name: full_db_mysql
+  go-mysql:
+    image: mariadb:latest
+    container_name: go_mysql
     ports:
       - 3306:3306
     environment:
@@ -26,31 +12,27 @@ services:
       - MYSQL_DATABASE=${DB_NAME}
       - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
     volumes:
-      - database_mysql:/var/lib/mysql
+      - go_mysql:/var/lib/mysql
     networks:
-      - fullstack
+      - go_mysql_network
 
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin_container
-    depends_on:
-      - fullstack-mysql
-    environment:
-      - PMA_HOST=fullstack-mysql # Note the "fullstack-mysql". Must be the name of the what you used as the mysql service.
-      - PMA_USER=${DB_USER}
-      - PMA_PORT=${DB_PORT}
-      - PMA_PASSWORD=${DB_PASSWORD}
+  go-adminer:
+    image: adminer:latest
+    container_name: go_adminer
+    restart: unless-stopped
     ports:
-      - 9090:80
-    restart: always
+      - 8000:8080
+    depends_on:
+      - go-mysql
+    environment:
+      ADMINER_DEFAULT_SERVER: go-mysql
     networks:
-      - fullstack
+      - go_mysql_network
 
 volumes:
-  api:
-  database_mysql:
+  go_mysql:
 
 # Networks to be created to facilitate communication between containers
 networks:
-  fullstack:
+  go_mysql_network:
     driver: bridge

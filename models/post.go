@@ -111,7 +111,7 @@ func CreatePost(create forms.PostForm) (id int64, message string, err error) {
 func UpdatePost(id int, update forms.PostForm) (rows int64, message string, err error) {
 	db := database.ConnectDB()
 
-	edit, err := db.Prepare("UPDATE post SET updatedAt=?, title=?, content=?, published=?, authorId=? WHERE id=?")
+	edit, err := db.Prepare("UPDATE post SET title=?, content=?, published=?, authorId=? WHERE id=?")
 
 	defer db.Close()
 
@@ -119,9 +119,7 @@ func UpdatePost(id int, update forms.PostForm) (rows int64, message string, err 
 		return 0, "Error when connect DB", err
 	}
 
-	timeStamp := time.Now().UTC().Format("2006-01-02 15:04:05") // Format timestamp in MySQL
-
-	res, err := edit.Exec(timeStamp, update.Title, update.Content, update.Published, update.AuthorId, id)
+	res, err := edit.Exec(update.Title, update.Content, update.Published, update.AuthorId, id)
 
 	if err != nil {
 		return 0, "Error when connect DB", err
