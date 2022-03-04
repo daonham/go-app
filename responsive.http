@@ -1,7 +1,7 @@
 ### Get all post
 GET http://localhost:8070/post
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NfdXVpZCI6IjEyZDBmNGQzLWRiN2QtNGQxZC1iOGQ1LTIzYmEyNjQxZjNlMSIsImF1dGhvcml6ZWQiOnRydWUsImV4cCI6MTYzNDQ1OTE0NiwidXNlcl9pZCI6N30.15mcp7xLaCBzGy113gJf2-ZQT4XH5n1bS-5Nvy1WB3c
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NfdXVpZCI6IjgyNDAyZWYwLWQwNTctNDkwZi04OTIzLTgxZjM2YmE3MzkwMSIsImF1dGhvcml6ZWQiOnRydWUsImV4cCI6MTY0NjQxMTcwNywidXNlcl9pZCI6MX0.1pr5adOjbYn772kdxAKnP4hREhGQWhGXtIUdoPFI6Ck
 
 ### Get an post
 GET http://localhost:8070/post/1
@@ -12,8 +12,8 @@ POST http://localhost:8070/post
 Content-Type: application/json
 
 {
-    "title": "Post title new",
-    "content": "Post content new",
+    "title": "Post title 1",
+    "content": "Post content 1",
     "published": true,
     "authorId": 1
 }
@@ -46,10 +46,10 @@ POST http://localhost:8070/user
 Content-Type: application/json
 
 {
-    "email": "1@g.com",
-    "name": "admin",
-    "pass": "admin",
-    "role": "admin"
+    "email": "2@g.com",
+    "name": "user1",
+    "pass": "user1",
+    "role": "user"
 }
 
 ### Update a user
@@ -80,9 +80,9 @@ POST http://localhost:8070/register
 Content-Type: application/json
 
 {
-    "email": "13@gmail.com",
-    "name": "nham",
-    "pass": "1234"
+    "email": "3@g.com",
+    "name": "user2",
+    "pass": "user2"
 }
 
 ### Get token by refresh token

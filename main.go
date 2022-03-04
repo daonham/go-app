@@ -2,9 +2,7 @@ package main
 
 import (
 	"os"
-	"time"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -17,7 +15,20 @@ import (
 func RequestIDMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		uuid := uuid.NewV4()
-		c.Writer.Header().Set("X-Request-Id", uuid.String())
+		c.Writer.Header().Set("X-Request-ID", uuid.String())
+		c.Next()
+	}
+}
+
+func CORSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Max-Age", "86400")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, UPDATE")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Origin, Authorization, Accept, Client-Security-Token, Accept-Encoding, x-access-token")
+		c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Length")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+
 		c.Next()
 	}
 }
@@ -44,17 +55,15 @@ func main() {
 
 	router := gin.Default()
 
-	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "OPTIONS", "DELETE"},
-		AllowHeaders:     []string{"X-Requested-With, Content-Type, Origin, Authorization, Accept, Client-Security-Token, Accept-Encoding, x-access-token"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
-	}))
+	// trusted proxy
+	router.SetTrustedProxies(nil)
+
+	// middleware
+	router.Use(CORSMiddleware())
 	router.Use(RequestIDMiddleware())
 	router.Use(gzip.Gzip(gzip.BestCompression))
 
+	// controllers
 	router.GET("/post", TokenAuthMiddleware(), controllers.GetPosts)
 	router.GET("/post/:id", controllers.GetPost)
 	router.POST("/post", controllers.CreatePost)
